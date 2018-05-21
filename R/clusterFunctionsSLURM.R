@@ -21,13 +21,16 @@
 #' @template ret_cf
 #' @family clusterFunctions
 #' @export
-makeClusterFunctionsSLURM = function(template.file, list.jobs.cmd = c("squeue", "-h", "-o %i", "-u $USER")) {
+makeClusterFunctionsSLURM = function(template.file, 
+		list.jobs.cmd = c("squeue", "-h", "-o %i", "-u $USER"),
+		sbatch.cmd = c("sbatch"),
+		scancel.cmd = c("scancel")) {
   assertCharacter(list.jobs.cmd, min.len = 1L, any.missing = FALSE)
   template = cfReadBrewTemplate(template.file)
 
   submitJob = function(conf, reg, job.name, rscript, log.file, job.dir, resources, arrayjobs) {
     outfile = cfBrewTemplate(conf, template, rscript, "sb")
-    res = runOSCommandLinux("sbatch", outfile, stop.on.exit.code = FALSE)
+    res = runOSCommandLinux(sbatch.cmd[1L], outfile, stop.on.exit.code = FALSE)
 
     max.jobs.msg = "sbatch: error: Batch job submission failed: Job violates accounting policy (job submit limit, user's size and/or time limits)"
     temp.error = "Socket timed out on send/recv operation"
@@ -45,7 +48,7 @@ makeClusterFunctionsSLURM = function(template.file, list.jobs.cmd = c("squeue", 
   }
 
   killJob = function(conf, reg, batch.job.id) {
-    cfKillBatchJob("scancel", batch.job.id)
+    cfKillBatchJob(scancel.cmd[1L], batch.job.id)
   }
 
   listJobs = function(conf, reg) {
